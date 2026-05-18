@@ -284,7 +284,7 @@ async function sendMessage() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'llama-3.1-8b-instant',
+        model: 'google/gemma-4-26b-a4b-it:free',
         messages: [{ role: 'system', content: systemPrompt }, ...history],
         temperature: 0.7,
         max_tokens: 250
