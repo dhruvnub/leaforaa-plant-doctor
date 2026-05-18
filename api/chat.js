@@ -1,50 +1,31 @@
-export const config = { runtime: 'edge' };
+export default async function handler(req, res) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-export default async function handler(req) {
-  const corsHeaders = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
-  };
+  if (req.method === 'OPTIONS') return res.status(200).end();
+  if (req.method !== 'POST') return res.status(405).end();
 
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { status: 204, headers: corsHeaders });
-  }
+  const apiKey = process.env.OPENROUTER_API_KEY;
 
-  const apiKey = process.env.GROQ_API_KEY;
-
-  if (!apiKey) {
-    return new Response(JSON.stringify({ 
-      error: 'No API key found',
-      env: Object.keys(process.env).join(',')
-    }), {
-      status: 400,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-    });
-  }
+  if (!apiKey) return res.status(500).json({ error: 'API key missing' });
 
   try {
-    const body = await req.json();
-
-    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + apiKey
+        'Authorization': 'Bearer ' + apiKey,
+        'HTTP-Referer': 'https://leaforaa.com',
+        'X-Title': 'Leaforaa Plant Doctor'
       },
-      body: JSON.stringify(body)
+      body: JSON.stringify(req.body)
     });
 
-    const text = await response.text();
-    return new Response(text, {
-      status: response.status,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-    });
+    const data = await response.json();
+    return res.status(200).json(data);
 
   } catch (err) {
-    return new Response(JSON.stringify({ error: err.message }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-    });
+    return res.status(500).json({ error: err.message });
   }
 }
