@@ -1,51 +1,28 @@
-export const config = { runtime: 'edge' };
+export default async function handler(req, res) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-export default async function handler(req) {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, {
-      status: 200,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type',
-      }
-    });
-  }
+  if (req.method === 'OPTIONS') return res.status(200).end();
 
   try {
-    const body = await req.json();
-    const apiKey = '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';
+    const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
 
-    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + apiKey,
-        'HTTP-Referer': 'https://leaforaa.com',
-        'X-Title': 'Leaforaa Plant Doctor'
+        'Authorization': 'Bearer ' + process.env.GROQ_API_KEY
       },
       body: JSON.stringify(body)
     });
 
     const data = await response.json();
-
-    return new Response(JSON.stringify(data), {
-      status: 200,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      }
-    });
+    return res.status(200).json(data);
 
   } catch (err) {
-    return new Response(JSON.stringify({
+    return res.status(200).json({
       choices: [{ message: { content: 'Error: ' + err.message } }]
-    }), {
-      status: 200,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      }
     });
   }
 }
