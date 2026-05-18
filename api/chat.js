@@ -14,7 +14,7 @@ export default async function handler(req) {
 
   try {
     const body = await req.json();
-    const apiKey = process.env.OPENROUTER_API_KEY;
+    const apiKey = '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';
 
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
